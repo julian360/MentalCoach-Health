@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mental Coach & Health (React)</title>
     
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#86a8e7">
+
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -98,7 +102,7 @@
             profesor: {
                 id: "profesor",
                 name: "Profesor",
-                image: "/MentalCoach-Health/icons/Profesor.png",
+                image: "/MentalCoac-hHealth/icons/Profesor.png",
                 prompt: "Ciudadano muy directo, práctico. no anda con vueltas. frio pero buena persona. Dira verdades incomodas sin escrupulos. Ayudara a resolver problemas dando consejos. Respuestas cortas y concisas. Preguntar al usuario de donde es, para tener un mejor contexto. Consejos extremos. picante. intenta finalizar con una pregunta, y recopilar informacion durante un rato. da algunos consejos concretos y pregunta si lo puedes ayudar en algo mas.",
                 welcome: "Hola, soy un ciudadano retirado de 70 años. ¿Necesitas un consejo?"
             }
@@ -123,7 +127,7 @@
         );
 
         // Componente para la pantalla de selección de personajes (DISEÑO RENOVADO)
-        const CharacterSelectionScreen = ({ onCharacterSelect }) => (
+        const CharacterSelectionScreen = ({ onCharacterSelect, onInstall, canInstall }) => (
             <div className="w-full min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 homepage-gradient-bg">
                 <div className="text-center z-10 w-full">
                     <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-black mb-3 tracking-tight">
@@ -137,6 +141,17 @@
                             <CharacterCard key={char.id} character={char} onSelect={onCharacterSelect} />
                         ))}
                     </div>
+                    {/* Botón de instalación PWA */}
+                    {canInstall && (
+                        <div className="mt-16">
+                            <button 
+                                onClick={onInstall}
+                                className="bg-white/30 backdrop-blur-lg text-black font-bold py-3 px-6 rounded-full shadow-lg hover:bg-white/50 transition-all duration-300 flex items-center gap-3 mx-auto"
+                            >
+                                Instalar App 📱
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -145,7 +160,6 @@
         const ChatMessage = ({ message, characterImage, onProfileClick }) => {
             const isUser = message.role === 'user';
             
-            // Reemplaza **texto** por <strong>texto</strong> para negritas
             const formatText = (text) => {
                 const boldedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
                 return boldedText.replace(/\n/g, '<br />');
@@ -156,7 +170,6 @@
             return (
                 <div className={`flex items-start gap-3 mb-4 ${isUser ? 'justify-end' : ''}`}>
                     {!isUser && (
-                        // El click en la imagen del perfil ahora es manejado
                         <button onClick={onProfileClick} className="flex-shrink-0 rounded-full transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                            <img src={characterImage} alt="Avatar" className="h-8 w-8 rounded-full object-cover" />
                         </button>
@@ -325,7 +338,6 @@
                         </form>
                     </div>
                     
-                    {/* Modal de confirmación de salida */}
                     {showExitModal && (
                         <div className="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-50">
                             <div className="bg-white rounded-lg shadow-xl p-8 max-w-sm w-full text-center">
@@ -339,7 +351,6 @@
                         </div>
                     )}
                     
-                    {/* Modal para ver la foto de perfil en grande */}
                     {isProfileModalVisible && (
                         <div 
                             className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 transition-opacity duration-300"
@@ -383,15 +394,39 @@
         // --- COMPONENTE PRINCIPAL DE LA APLICACIÓN ---
         function App() {
             // --- CLAVE DE API ---
-            // --- ¡PEGA TU CLAVE DE API DE GEMINI AQUÍ! ---
             const apiKey = "AIzaSyDbHW8acWDhb_9EiC82RfIOCaYNh5QwORg"; // Reemplaza con tu clave
             
             const [currentScreen, setCurrentScreen] = React.useState('selection');
             const [selectedCharacter, setSelectedCharacter] = React.useState(null);
+            const [installPrompt, setInstallPrompt] = React.useState(null);
+
+            // Hook para capturar el evento de instalación
+            React.useEffect(() => {
+                const handler = e => {
+                    e.preventDefault();
+                    console.log("beforeinstallprompt event fired");
+                    setInstallPrompt(e);
+                };
+                window.addEventListener("beforeinstallprompt", handler);
+
+                return () => window.removeEventListener("beforeinstallprompt", handler);
+            }, []);
+
+            const handleInstallClick = () => {
+                if (!installPrompt) return;
+                installPrompt.prompt();
+                installPrompt.userChoice.then(choiceResult => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the A2HS prompt');
+                    } else {
+                        console.log('User dismissed the A2HS prompt');
+                    }
+                    setInstallPrompt(null);
+                });
+            };
 
             const handleCharacterSelect = (charId) => {
                 if (!apiKey) {
-                   // Usamos un modal custom en vez de alert
                    const modal = document.createElement('div');
                    modal.innerHTML = `
                         <div style="position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index: 100;">
@@ -417,7 +452,11 @@
             return (
                 <div className="w-full h-full font-sans">
                     {currentScreen === 'selection' ? (
-                        <CharacterSelectionScreen onCharacterSelect={handleCharacterSelect} />
+                        <CharacterSelectionScreen 
+                            onCharacterSelect={handleCharacterSelect} 
+                            onInstall={handleInstallClick}
+                            canInstall={!!installPrompt}
+                        />
                     ) : (
                         <ChatScreen character={selectedCharacter} onBack={handleBackToSelection} apiKey={apiKey} />
                     )}
@@ -429,6 +468,21 @@
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
 
+    </script>
+    
+    <!-- Script para registrar el Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => {
+                        console.log('ServiceWorker: Registration successful with scope: ', registration.scope);
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker: Registration failed: ', err);
+                    });
+            });
+        }
     </script>
 </body>
 </html>
