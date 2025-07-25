@@ -12,7 +12,10 @@ const urlsToCache = [
   'https://unpkg.com/@babel/standalone/babel.min.js',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap',
   // NOTA: Agrega aquí las rutas a tus imágenes de personajes si quieres que funcionen offline
-  // Por ejemplo: '/MentalCoach&Health/icons/psicoanalista.png',
+  '/MentalCoach&Health/icons/psicoanalista.png',
+   '/MentalCoach&Health/icons/Astra.png',
+   '/MentalCoach&Health/icons/Profesor.png',
+   '/MentalCoach&Health/icons/Coach.png',
 ];
 
 // Evento 'install': Se dispara cuando el Service Worker se instala.
