@@ -249,7 +249,7 @@
                     if (!apiKey) {
                         throw new Error("La clave de API no está configurada.");
                     }
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
                     
                     const apiHistory = newMessages.map(msg => ({
                         role: msg.role === 'user' ? 'user' : 'model',
