@@ -1,6 +1,6 @@
 // service-worker.js
 
-const CACHE_NAME = 'mental-coach-cache-v1.0.2';
+const CACHE_NAME = 'mental-coach-cache-v1.0.3';
 // Lista de archivos para precachear.
 // Incluye la página principal, los scripts de React/Babel/Tailwind y otros assets.
 const urlsToCache = [
@@ -12,10 +12,7 @@ const urlsToCache = [
   'https://unpkg.com/@babel/standalone/babel.min.js',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap',
   // NOTA: Agrega aquí las rutas a tus imágenes de personajes si quieres que funcionen offline
-  '/MentalCoachHealth/icons/psicoanalista.png',
-   '/MentalCoachHealth/icons/Astra.png',
-   '/MentalCoachHealth/icons/Profesor.png',
-   '/MentalCoachHealth/icons/Coach.png',
+
 ];
 
 // Evento 'install': Se dispara cuando el Service Worker se instala.
