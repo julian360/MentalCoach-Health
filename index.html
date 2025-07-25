@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mental Coach & Health (React)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- React y ReactDOM desde CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    
+    <!-- Babel (para transpilar JSX en el navegador) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        /* Estilos base para asegurar que la app ocupe toda la pantalla */
+        body, html, #root {
+            font-family: 'Inter', sans-serif;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5; /* Un color de fondo base más suave */
+        }
+        
+        /* --- NUEVO DISEÑO DE HOMEPAGE --- */
+        .homepage-gradient-bg {
+            background-color: #7f7fd5;
+            background-image: linear-gradient(to top, #86a8e7 0%, #91eae4 100%);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Formas decorativas para el fondo */
+        .homepage-gradient-bg::before,
+        .homepage-gradient-bg::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 0; /* Detrás del contenido */
+            filter: blur(60px);
+        }
+
+        .homepage-gradient-bg::before {
+            width: 300px;
+            height: 300px;
+            top: -100px;
+            left: -100px;
+        }
+
+        .homepage-gradient-bg::after {
+            width: 400px;
+            height: 400px;
+            bottom: -150px;
+            right: -150px;
+            background: rgba(255, 255, 255, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <!-- El contenedor donde se montará la aplicación de React -->
+    <div id="root"></div>
+
+    <!-- El script de React con el atributo type="text/babel" -->
+    <script type="text/babel">
+    
+        // --- DATOS DE LOS PERSONAJES ---
+        const characterPersonalities = {
+            psicoanalista: {
+                id: "psicoanalista",
+                name: "Psicoanalista",
+                image: "/MentalCoach&Health/icons/psicoanalista.png",
+                prompt: "Eres un psicoanalista de la escuela freudiana. Respuestas que hacen reflexionar. pero no hagas respuestas largas. Intenta finalizar con una pregunta, y recopilar informacion durante un rato. Luego despues de diez minutos de charla da algunos consejos y pregunta si lo puedes ayudar en algo mas.",
+                welcome: "Adelante, póngase cómodo. Cuénteme, ¿qué le trae por aquí hoy?"
+            },
+            coaching: {
+                id: "coaching",
+                name: "Coach",
+                image: "/MentalCoach&Health/icons/Coach.png",
+                prompt: "Eres un coach motivacional y de vida... enfoque mas fisico, salud fisica y salud mental.  sin respuestas largas. busca libros sobre habitos y coaching. finaliza con una pregunta y recopila informacion durante un rato. luego despues de 7 minutos aprox da algunos consejos y pregunta si lo puedes ayudar en algo mas..  ",
+                welcome: "¡Hola! ¿Qué buscas lograr hoy?"
+            },
+            astra: {
+                id: "astra",
+                name: "Astra",
+                image: "/MentalCoach&Health/icons/Astra.png",
+                prompt: "Eres Astra, una astróloga y guía espiritual. Evitar respuestas largas. Primero que nada preguntar fecha hora y ubicacion de nacimiento. Leer carta astral para esos datos online y cargarlos en memoria. intenta finalizar con una pregunta, y recopilar informacion durante un rato. Luego despues de diez minutos de charla da algunos consejos y pregunta si lo puedes ayudar en algo mas. Tirar una carta de tarot, Describir su imagen, y su significado ",
+                welcome: "Te doy la bienvenida. Soy Astra."
+            },
+            profesor: {
+                id: "profesor",
+                name: "Profesor",
+                image: "/MentalCoach&Health/icons/Profesor.png",
+                prompt: "Ciudadano muy directo, práctico. no anda con vueltas. frio pero buena persona. Dira verdades incomodas sin escrupulos. Ayudara a resolver problemas dando consejos. Respuestas cortas y concisas. Preguntar al usuario de donde es, para tener un mejor contexto. Consejos extremos. picante. intenta finalizar con una pregunta, y recopilar informacion durante un rato. da algunos consejos concretos y pregunta si lo puedes ayudar en algo mas.",
+                welcome: "Hola, soy un ciudadano retirado de 70 años. ¿Necesitas un consejo?"
+            }
+        };
+
+        // --- COMPONENTES DE REACT ---
+
+        // Componente para una tarjeta de personaje individual (DISEÑO RENOVADO)
+        const CharacterCard = ({ character, onSelect }) => (
+            <div
+                className="bg-white/20 backdrop-blur-lg p-5 rounded-3xl shadow-lg hover:shadow-2xl hover:bg-white/30 hover:-translate-y-2 transition-all duration-300 cursor-pointer flex flex-col items-center text-center border border-white/30"
+                onClick={() => onSelect(character.id)}
+            >
+                <img 
+                    src={character.image} 
+                    alt={character.name} 
+                    className="w-32 h-32 sm:w-32 sm:h-32 rounded-full mb-4 border-4 border-white/50 shadow-md object-cover"
+                    onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/150x150/cccccc/FFFFFF?text=Error'; }}
+                />
+                <h3 className="text-xl sm:text-xl font-bold text-white h-14 flex items-center justify-center">{character.name}</h3>
+            </div>
+        );
+
+        // Componente para la pantalla de selección de personajes (DISEÑO RENOVADO)
+        const CharacterSelectionScreen = ({ onCharacterSelect }) => (
+            <div className="w-full min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 homepage-gradient-bg">
+                <div className="text-center z-10 w-full">
+                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-black mb-3 tracking-tight">
+                         Mental <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 bg-clip-text text-transparent">Coach & Health</span>
+                    </h1>
+                    <p className="text-[rgb(71_69_72/80%)] text-lg sm:text-xl max-w-2xl mx-auto mb-12">
+                        Elige un especialista para iniciar una conversación transformadora.
+                    </p>
+                    <div className="grid grid-cols-2 scale-105 sm:scale-125 mt-5 sm:mt-[100px]  md:grid-cols-4 gap-5 md:gap-8 w-full max-w-sm md:max-w-4xl mx-auto">
+                        {Object.values(characterPersonalities).map(char => (
+                            <CharacterCard key={char.id} character={char} onSelect={onCharacterSelect} />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+
+        // Componente para un mensaje en el chat
+        const ChatMessage = ({ message, characterImage, onProfileClick }) => {
+            const isUser = message.role === 'user';
+            
+            // Reemplaza **texto** por <strong>texto</strong> para negritas
+            const formatText = (text) => {
+                const boldedText = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+                return boldedText.replace(/\n/g, '<br />');
+            };
+
+            const messageHTML = { __html: formatText(message.text) };
+
+            return (
+                <div className={`flex items-start gap-3 mb-4 ${isUser ? 'justify-end' : ''}`}>
+                    {!isUser && (
+                        // El click en la imagen del perfil ahora es manejado
+                        <button onClick={onProfileClick} className="flex-shrink-0 rounded-full transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                           <img src={characterImage} alt="Avatar" className="h-8 w-8 rounded-full object-cover" />
+                        </button>
+                    )}
+                    <div 
+                        className={`p-3 rounded-lg max-w-xs md:max-w-md break-words shadow ${isUser ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'}`}
+                    >
+                        <p className="text-sm" dangerouslySetInnerHTML={messageHTML}></p>
+                    </div>
+                    {isUser && (
+                        <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">TÚ</div>
+                    )}
+                </div>
+            );
+        };
+
+        // Componente para la pantalla de Chat
+        const ChatScreen = ({ character, onBack, apiKey }) => {
+            const [messages, setMessages] = React.useState([{ role: 'model', text: character.welcome }]);
+            const [inputValue, setInputValue] = React.useState('');
+            const [isLoading, setIsLoading] = React.useState(false);
+            const [showMenu, setShowMenu] = React.useState(false);
+            const [showExitModal, setShowExitModal] = React.useState(false);
+            const [isProfileModalVisible, setProfileModalVisible] = React.useState(false);
+            const chatContainerRef = React.useRef(null);
+
+            React.useEffect(() => {
+                if (chatContainerRef.current) {
+                    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                }
+            }, [messages]);
+
+            const handleSendMessage = async (e) => {
+                e.preventDefault();
+                const userMessage = inputValue.trim();
+                if (!userMessage || isLoading) return;
+
+                const newMessages = [...messages, { role: 'user', text: userMessage }];
+                setMessages(newMessages);
+                setInputValue('');
+                setIsLoading(true);
+
+                try {
+                    if (!apiKey) {
+                        throw new Error("La clave de API no está configurada.");
+                    }
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+                    
+                    const apiHistory = newMessages.map(msg => ({
+                        role: msg.role === 'user' ? 'user' : 'model',
+                        parts: [{ text: msg.text }]
+                    }));
+
+                    const payload = {
+                        contents: apiHistory,
+                        system_instruction: { parts: [{ text: character.prompt }] },
+                        generationConfig: { temperature: 0.75, topP: 0.9, topK: 40 }
+                    };
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error.message || 'Error en la respuesta de la API');
+                    }
+
+                    const result = await response.json();
+                    let geminiMessage = "No se pudo obtener una respuesta.";
+                    if (result.candidates?.[0]?.content?.parts?.[0]) {
+                        geminiMessage = result.candidates[0].content.parts[0].text;
+                    }
+                    setMessages(prev => [...prev, { role: 'model', text: geminiMessage }]);
+
+                } catch (error) {
+                    console.error("Error al llamar a Gemini:", error);
+                    setMessages(prev => [...prev, { role: 'model', text: `Lo siento, ocurrió un error: ${error.message}` }]);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+            
+            const saveConversationToFile = () => {
+                let fileContent = `Conversación con ${character.name}\n`;
+                fileContent += "====================================\n\n";
+
+                messages.forEach(message => {
+                    const speaker = message.role === 'user' ? 'Tú' : character.name;
+                    fileContent += `${speaker}: ${message.text}\n\n`;
+                });
+
+                const blob = new Blob([fileContent], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-').replace('T', '_');
+                a.href = url;
+                a.download = `conversacion-${character.name.toLowerCase().replace(/\s+/g, '-')}-${timestamp}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                setShowMenu(false);
+            };
+
+            return (
+                <div className="w-full h-full flex flex-col bg-gray-50">
+                    <header className="flex items-center p-3 border-b border-gray-200 bg-white flex-shrink-0">
+                        <button onClick={() => setShowExitModal(true)} className="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                        </button>
+                        <button onClick={() => setProfileModalVisible(true)} className="rounded-full transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                            <img src={character.image} alt="Avatar" className="w-10 h-10 rounded-full mx-3 object-cover"/>
+                        </button>
+                        <h2 className="text-lg font-semibold text-gray-800">{character.name}</h2>
+                        <div className="ml-auto relative">
+                            <button onClick={() => setShowMenu(!showMenu)} className="p-2 rounded-full hover:bg-gray-200 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+                            </button>
+                            {showMenu && (
+                                <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-20 border border-gray-100">
+                                    <a href="#" onClick={saveConversationToFile} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">Guardar conversación</a>
+                                </div>
+                            )}
+                        </div>
+                    </header>
+
+                    <div ref={chatContainerRef} className="flex-1 p-4 overflow-y-auto">
+                        {messages.map((msg, index) => (
+                            <ChatMessage 
+                                key={index} 
+                                message={msg} 
+                                characterImage={character.image} 
+                                onProfileClick={() => setProfileModalVisible(true)}
+                            />
+                        ))}
+                        {isLoading && (
+                            <div className="p-4 text-center text-sm text-gray-500">
+                                <div className="flex justify-center items-center gap-2">
+                                    <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span>Pensando...</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0">
+                        <form onSubmit={handleSendMessage} className="flex items-center gap-3">
+                            <input
+                                type="text"
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                disabled={isLoading}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
+                                placeholder="Escribe tu mensaje aquí..."
+                                autoComplete="off"
+                            />
+                            <button type="submit" disabled={isLoading || !inputValue} className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                            </button>
+                        </form>
+                    </div>
+                    
+                    {/* Modal de confirmación de salida */}
+                    {showExitModal && (
+                        <div className="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-50">
+                            <div className="bg-white rounded-lg shadow-xl p-8 max-w-sm w-full text-center">
+                                <h3 className="text-xl font-bold text-gray-800 mb-4">Confirmar Salida</h3>
+                                <p className="text-gray-600 mb-8">Al salir, se perderá la conversación actual. ¿Seguro que deseas salir?</p>
+                                <div className="flex justify-center gap-4">
+                                    <button onClick={() => setShowExitModal(false)} className="px-6 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors font-semibold">Cancelar</button>
+                                    <button onClick={onBack} className="px-6 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors font-semibold">Sí, Salir</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Modal para ver la foto de perfil en grande */}
+                    {isProfileModalVisible && (
+                        <div 
+                            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50 transition-opacity duration-300"
+                            onClick={() => setProfileModalVisible(false)}
+                        >
+                            <div 
+                                className="relative transform transition-all duration-300 scale-95 opacity-0 animate-fade-in-scale"
+                                style={{ animation: 'fade-in-scale 0.3s forwards' }}
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <img 
+                                    src={character.image} 
+                                    alt={character.name} 
+                                    className="max-w-[85vw] max-h-[85vh] rounded-lg shadow-2xl object-contain"
+                                    onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/600x600/cccccc/FFFFFF?text=Imagen+no+disponible'; }}
+                                />
+                                <button 
+                                    onClick={() => setProfileModalVisible(false)} 
+                                    className="absolute -top-3 -right-3 bg-white text-gray-800 rounded-full h-8 w-8 flex items-center justify-center text-2xl font-bold shadow-lg hover:bg-gray-200 transition-colors"
+                                >
+                                    &times;
+                                </button>
+                            </div>
+                            <style>
+                                {`
+                                @keyframes fade-in-scale {
+                                    from { opacity: 0; transform: scale(0.95); }
+                                    to { opacity: 1; transform: scale(1); }
+                                }
+                                .animate-fade-in-scale {
+                                    animation: fade-in-scale 0.3s ease-out forwards;
+                                }
+                                `}
+                            </style>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // --- COMPONENTE PRINCIPAL DE LA APLICACIÓN ---
+        function App() {
+            // --- CLAVE DE API ---
+            // --- ¡PEGA TU CLAVE DE API DE GEMINI AQUÍ! ---
+            const apiKey = "AIzaSyDbHW8acWDhb_9EiC82RfIOCaYNh5QwORg"; // Reemplaza con tu clave
+            
+            const [currentScreen, setCurrentScreen] = React.useState('selection');
+            const [selectedCharacter, setSelectedCharacter] = React.useState(null);
+
+            const handleCharacterSelect = (charId) => {
+                if (!apiKey) {
+                   // Usamos un modal custom en vez de alert
+                   const modal = document.createElement('div');
+                   modal.innerHTML = `
+                        <div style="position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index: 100;">
+                            <div style="background: white; padding: 2rem; border-radius: 0.5rem; text-align: center;">
+                                <h3 style="margin-top:0; font-size: 1.25rem;">Error de Configuración</h3>
+                                <p>Por favor, configura tu clave de API de Gemini en el código para continuar.</p>
+                                <button id="close-alert-modal" style="margin-top: 1rem; padding: 0.5rem 1rem; background-color: #ef4444; color: white; border: none; border-radius: 0.25rem; cursor: pointer;">Entendido</button>
+                            </div>
+                        </div>`;
+                   document.body.appendChild(modal);
+                   document.getElementById('close-alert-modal').onclick = () => document.body.removeChild(modal);
+                   return;
+                }
+                setSelectedCharacter(characterPersonalities[charId]);
+                setCurrentScreen('chat');
+            };
+
+            const handleBackToSelection = () => {
+                setSelectedCharacter(null);
+                setCurrentScreen('selection');
+            };
+            
+            return (
+                <div className="w-full h-full font-sans">
+                    {currentScreen === 'selection' ? (
+                        <CharacterSelectionScreen onCharacterSelect={handleCharacterSelect} />
+                    ) : (
+                        <ChatScreen character={selectedCharacter} onBack={handleBackToSelection} apiKey={apiKey} />
+                    )}
+                </div>
+            );
+        }
+
+        // --- Montar la aplicación de React en el DOM ---
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+
+    </script>
+</body>
+</html>
