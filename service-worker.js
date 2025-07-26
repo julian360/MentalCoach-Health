@@ -10,6 +10,7 @@ const urlsToCache = [
   'https://unpkg.com/react@18/umd/react.development.js',
   'https://unpkg.com/react-dom@18/umd/react-dom.development.js',
   'https://unpkg.com/@babel/standalone/babel.min.js',
+    '/MentalCoachHealth/icons/Logo.png',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap',
   // NOTA: Agrega aquí las rutas a tus imágenes de personajes si quieres que funcionen offline
 
