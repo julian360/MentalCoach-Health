@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mental Coach & Health (React)</title>
+    <title>Mental Coach & Health App</title>
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
@@ -135,9 +135,9 @@
             <div className="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
                 <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
                     <h3 className="text-2xl font-bold text-gray-800 mb-4">¡Bienvenido/a!</h3>
-                    <p className="text-gray-600 mb-8">Para mejorar tu experiencia y permitirte continuar tus conversaciones más tarde, podemos guardar tu historial de chat de forma segura. ¿Estás de acuerdo?</p>
+                    <p className="text-gray-600 mb-8">Para mejorar tu experiencia y la del asistente, se guardará el historial de conversaciones y tu progreso. ¿Estás de acuerdo?</p>
                     <div className="flex justify-center gap-4">
-                        <button onClick={() => onConsent(false)} className="px-6 py-3 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors font-semibold">No, gracias</button>
+                        <button onClick={() => onConsent(false)} className="px-6 py-3 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors font-semibold">No  guardar</button>
                         <button onClick={() => onConsent(true)} className="px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors font-semibold">Sí, guardar</button>
                     </div>
                     <p className="text-xs text-gray-400 mt-6">Puedes cambiar esta opción más adelante.</p>
@@ -145,7 +145,7 @@
             </div>
         );
 
-        const CharacterSelectionScreen = ({ onCharacterSelect, user, onLogin, onLogout }) => (
+        const CharacterSelectionScreen = ({ onCharacterSelect, user, onLogin, onLogout, onInstall, canInstall }) => (
             <div className="w-full min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 homepage-gradient-bg">
                 <div className="absolute top-5 right-5 z-20">
                     {user ? (
@@ -167,6 +167,16 @@
                     <div className="grid grid-cols-2 scale-105 sm:scale-125 mt-5 sm:mt-[100px] md:grid-cols-4 gap-5 md:gap-8 w-full max-w-sm md:max-w-4xl mx-auto">
                         {Object.values(characterPersonalities).map(char => <CharacterCard key={char.id} character={char} onSelect={onCharacterSelect} />)}
                     </div>
+                    {canInstall && (
+                        <div className="mt-16">
+                            <button 
+                                onClick={onInstall}
+                                className="bg-white/30 backdrop-blur-lg text-black font-bold py-3 px-6 rounded-full shadow-lg hover:bg-white/50 transition-all duration-300 flex items-center gap-3 mx-auto"
+                            >
+                                Instalar App 📱
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -220,31 +230,29 @@
             // Manejo del botón "Atrás" del navegador
             React.useEffect(() => {
                 popstateHandler.current = () => {
-                    // If the user is logged in, exit directly without a confirmation dialog.
                     if (user) {
                         onBack();
                     } else {
-                        // For guests, push a state to prevent immediate exit and show the confirmation modal.
                         window.history.pushState({ screen: 'chat' }, '', '#chat');
                         setShowExitModal(true);
                     }
                 };
 
-                // Ensure there's a history state to pop
                 if (window.history.state?.screen !== 'chat') {
                     window.history.pushState({ screen: 'chat' }, '', '#chat');
                 }
 
-                // Add the event listener
                 window.addEventListener('popstate', popstateHandler.current);
 
-                // Cleanup function to remove the listener when the component unmounts
                 return () => {
                     if (popstateHandler.current) {
                         window.removeEventListener('popstate', popstateHandler.current);
                     }
+                     if (window.location.hash === '#chat') {
+                        window.history.replaceState(null, '', window.location.pathname);
+                    }
                 };
-            }, [user, onBack]); // Add 'onBack' to dependency array
+            }, [user, onBack]);
 
             React.useEffect(() => {
                 if (chatContainerRef.current) {
@@ -253,13 +261,8 @@
             }, [messages]);
 
             const handleConfirmExit = () => {
-                // El listener de popstate se eliminará cuando el componente se desmonte,
-                // así que no necesitamos quitarlo manualmente aquí.
-                
-                // Para los invitados, la navegación hacia atrás fue bloqueada. 
-                // Ahora necesitamos ejecutarla para sincronizar la URL.
                 window.history.back();
-                onBack(); // Llama a la función para cambiar el estado de React y volver a la pantalla de selección.
+                onBack();
             };
 
             const saveConversationToFirestore = async (currentMessages) => {
@@ -330,7 +333,6 @@
              return (
                 <div className="w-full h-full flex flex-col bg-gray-50">
                     <header className="flex items-center p-3 border-b border-gray-200 bg-white flex-shrink-0">
-                        {/* Este botón ahora simplemente llama a history.back(), que es manejado por nuestro listener de popstate. */}
                         <button onClick={() => window.history.back()} className="p-2 rounded-full hover:bg-gray-200 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                         </button>
@@ -398,11 +400,36 @@
             const [currentScreen, setCurrentScreen] = React.useState('selection');
             const [selectedCharacter, setSelectedCharacter] = React.useState(null);
             const [user, setUser] = React.useState(null);
-            const [userConsent, setUserConsent] = React.useState(null); // null: no preguntado, true: sí, false: no
+            const [userConsent, setUserConsent] = React.useState(null); 
             const [isAuthLoading, setIsAuthLoading] = React.useState(true);
+            const [installPrompt, setInstallPrompt] = React.useState(null);
+            // ===== NUEVO ESTADO: Para saber si la app ya está instalada =====
+            const [isInstalled, setIsInstalled] = React.useState(false);
             
             const firebaseServices = window.firebaseServices;
 
+            // Hook para capturar el evento de instalación
+            React.useEffect(() => {
+                const handler = e => {
+                    e.preventDefault();
+                    console.log("Evento 'beforeinstallprompt' capturado.");
+                    setInstallPrompt(e);
+                };
+                window.addEventListener("beforeinstallprompt", handler);
+
+                return () => window.removeEventListener("beforeinstallprompt", handler);
+            }, []);
+
+            // ===== NUEVO HOOK: Para verificar si la app se ejecuta en modo standalone (instalada) =====
+            React.useEffect(() => {
+                const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+                if (isStandalone) {
+                    console.log("La aplicación ya está instalada (modo standalone).");
+                    setIsInstalled(true);
+                }
+            }, []);
+
+            // Hook para el estado de autenticación de Firebase
             React.useEffect(() => {
                 if (!firebaseServices.auth) {
                     console.error("Servicios de Firebase no disponibles.");
@@ -429,34 +456,30 @@
                 return () => unsubscribe();
             }, [firebaseServices]);
 
-            // ===== MODIFICACIÓN INICIA AQUÍ =====
             const handleGoogleLogin = async () => {
                 if (!firebaseServices.auth) return;
-                setIsAuthLoading(true); // Muestra la pantalla de carga para evitar el parpadeo
+                setIsAuthLoading(true);
                 const { auth, GoogleAuthProvider, signInWithPopup } = firebaseServices;
                 const provider = new GoogleAuthProvider();
                 try {
                     await signInWithPopup(auth, provider);
-                    // onAuthStateChanged se encargará de poner isAuthLoading en false
                 } catch (error) {
                     console.error("Error durante el inicio de sesión con Google:", error);
-                    setIsAuthLoading(false); // Oculta la carga si hay un error
+                    setIsAuthLoading(false);
                 }
             };
 
             const handleLogout = async () => {
                 if (!firebaseServices.auth) return;
-                setIsAuthLoading(true); // Muestra la pantalla de carga durante el cierre de sesión
+                setIsAuthLoading(true);
                 const { auth, signOut } = firebaseServices;
                 try {
                     await signOut(auth);
-                    // onAuthStateChanged se encargará de poner isAuthLoading en false
                 } catch (error) {
                     console.error("Error durante el cierre de sesión:", error);
                     setIsAuthLoading(false);
                 }
             };
-            // ===== MODIFICACIÓN TERMINA AQUÍ =====
 
             const handleSetConsent = async (consent) => {
                 setUserConsent(consent);
@@ -473,6 +496,19 @@
                         console.error("Error guardando la preferencia del usuario:", error);
                     }
                 }
+            };
+            
+            const handleInstallClick = () => {
+                if (!installPrompt) return;
+                installPrompt.prompt();
+                installPrompt.userChoice.then(choiceResult => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('El usuario aceptó instalar la PWA');
+                    } else {
+                        console.log('El usuario rechazó instalar la PWA');
+                    }
+                    setInstallPrompt(null);
+                });
             };
 
             const handleCharacterSelect = (charId) => {
@@ -499,6 +535,9 @@
                             user={user}
                             onLogin={handleGoogleLogin}
                             onLogout={handleLogout}
+                            onInstall={handleInstallClick}
+                            // ===== LÓGICA ACTUALIZADA: El botón se muestra si hay un prompt Y la app no está instalada =====
+                            canInstall={!!installPrompt && !isInstalled}
                         />
                     ) : (
                         <ChatScreen 
