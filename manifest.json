@@ -1,7 +1,7 @@
 {
   "name": "Mental Coach & Health",
   "short_name": "Mental Coach & Health",
-  "description": "Chatea con especialistas de IA para mejorar tu bienestar mental y físico.",
+  "description": "Chatea con especialistas en IA para mejorar bienestar mental y físico.",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#f0f2f5",
