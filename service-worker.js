@@ -1,6 +1,6 @@
 // service-worker.js
 
-const CACHE_NAME = 'mental-coach-cache-v1.1.0';
+const CACHE_NAME = 'mental-coach-cache-v1.1.5';
 // Lista de archivos para precachear.
 // Incluye la página principal, los scripts de React/Babel/Tailwind y otros assets.
 const urlsToCache = [
