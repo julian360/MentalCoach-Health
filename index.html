@@ -77,7 +77,7 @@
     <script type="text/babel">
     
         // --- DATOS DE LOS PERSONAJES ---
-        const characterPersonalities = {
+            const characterPersonalities = {
             psicoanalista: {
                 id: "psicoanalista",
                 name: "Psicoanalista",
@@ -195,24 +195,33 @@
             const [showExitModal, setShowExitModal] = React.useState(false);
             const [isProfileModalVisible, setProfileModalVisible] = React.useState(false);
             const chatContainerRef = React.useRef(null);
+            const popstateHandler = React.useRef(null); // <-- CORRECCIÓN: Usar ref para el manejador de eventos
 
-            // Manejo del botón "Atrás" del navegador para mostrar modal de confirmación
+            // Manejo del botón "Atrás" del navegador
             React.useEffect(() => {
+                // Definir la función que manejará el evento popstate
+                popstateHandler.current = (event) => {
+                    // Esta es la "trampa". Cuando el usuario presiona "atrás", volvemos a
+                    // agregar nuestro estado al historial para "cancelar" la navegación y luego mostramos el modal.
+                    window.history.pushState({ screen: 'chat' }, '', '#chat');
+                    setShowExitModal(true);
+                };
+                
+                // Agregar una entrada en el historial para poder interceptar el botón "atrás"
                 if (window.history.state?.screen !== 'chat') {
                     window.history.pushState({ screen: 'chat' }, '', '#chat');
                 }
 
-                const handleBrowserBack = (event) => {
-                    window.history.pushState({ screen: 'chat' }, '', '#chat');
-                    setShowExitModal(true);
-                };
+                // Agregar el manejador de eventos
+                window.addEventListener('popstate', popstateHandler.current);
 
-                window.addEventListener('popstate', handleBrowserBack);
-
+                // Función de limpieza que se ejecuta cuando el componente se desmonta
                 return () => {
-                    window.removeEventListener('popstate', handleBrowserBack);
+                    if (popstateHandler.current) {
+                        window.removeEventListener('popstate', popstateHandler.current);
+                    }
                 };
-            }, []);
+            }, []); // El array vacío asegura que esto se ejecute solo una vez (al montar y desmontar)
 
             // Scroll automático al final del chat
             React.useEffect(() => {
@@ -221,7 +230,13 @@
                 }
             }, [messages]);
 
+            // <-- CORRECCIÓN: Lógica de confirmación de salida
             const handleConfirmExit = () => {
+                // 1. Quitar nuestro manejador de eventos para que no se dispare de nuevo con nuestra propia navegación.
+                if (popstateHandler.current) {
+                    window.removeEventListener('popstate', popstateHandler.current);
+                }
+                // 2. Llamar a la función onBack del padre, que ahora se encargará de la navegación.
                 onBack();
             };
 
@@ -316,11 +331,10 @@
                             </button>
                             {showMenu && (
                                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-20 border border-gray-100">
-                                    {/* --- CORRECCIÓN DEL BUG --- */}
                                     <a 
                                         href="#" 
                                         onClick={(e) => {
-                                            e.preventDefault(); // Previene la navegación del href="#" que activaba el modal
+                                            e.preventDefault();
                                             saveConversationToFile();
                                         }} 
                                         className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
@@ -480,12 +494,16 @@
                 setCurrentScreen('chat');
             };
 
+            // <-- CORRECCIÓN: Lógica para volver a la pantalla de selección
             const handleBackToSelection = () => {
+                // Ahora que el ChatScreen quita su propio detector de "popstate",
+                // podemos usar history.back() de forma segura para navegar.
+                window.history.back();
+                
+                // También actualizamos el estado de React inmediatamente para que la UI
+                // cambie sin demoras.
                 setSelectedCharacter(null);
                 setCurrentScreen('selection');
-                if (window.location.hash === '#chat') {
-                    window.history.replaceState(null, '', window.location.pathname);
-                }
             };
             
             return (
