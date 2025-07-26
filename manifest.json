@@ -8,17 +8,17 @@
   "theme_color": "#86a8e7",
   "icons": [
     {
-      "src":"icons/Logo.png",
+      "src":"/MentalCoachHealth/icons/Logo.png",
             "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "icons/Logo.png",
+      "src": "/MentalCoachHealth/icons/Logo.png",
       "type": "image/png",
       "sizes": "512x512"
     },
     {
-      "src": "icons/Logo.png",
+      "src": "/MentalCoachHealth/icons/Logo.png",
       "type": "image/png",
       "sizes": "512x512",
       "purpose": "maskable"
