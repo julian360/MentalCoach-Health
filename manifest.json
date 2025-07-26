@@ -1,27 +1,23 @@
 {
   "name": "Mental Coach & Health",
   "short_name": "Mental Coach & Health",
-  "description": "Chatea con especialistas de IA para mejorar tu bienestar mental y físico.",
+  "description": "Una aplicación para conversar con especialistas IA y mejorar tu bienestar.",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#f0f2f5",
   "theme_color": "#86a8e7",
   "icons": [
     {
-      "src":"/icons/Logo.png",
-            "type": "image/png",
-      "sizes": "192x192"
+      "src": "icons/Logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/icons/Logo.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    },
-    {
-      "src": "/icons/Logo.png",
-      "type": "image/png",
+      "src": "icons/Logo.png",
       "sizes": "512x512",
-      "purpose": "maskable"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
