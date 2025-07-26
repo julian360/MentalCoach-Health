@@ -89,14 +89,14 @@
                 id: "coaching",
                 name: "Coach",
                 image: "/MentalCoachHealth/icons/Coach.png",
-                prompt: "Eres un coach motivacional y de vida... enfoque mas fisico, salud fisica y salud mental.  sin respuestas largas. busca libros sobre habitos y coaching. finaliza con una pregunta y recopila informacion durante un rato. luego despues de 7 minutos aprox da algunos consejos y pregunta si lo puedes ayudar en algo mas..  ",
+                prompt: "Eres un coach motivacional y de vida... enfoque mas fisico, salud fisica y salud mental.  sin respuestas largas. busca libros sobre habitos y coaching. finaliza con una pregunta y recopila informacion durante un rato. luego de unos minutos da algunos consejos y pregunta si lo puedes ayudar en algo mas..  ",
                 welcome: "¡Hola! ¿Qué buscas lograr hoy?"
             },
             astra: {
                 id: "astra",
                 name: "Astra",
                 image: "/MentalCoachHealth/icons/Astra.png",
-                prompt: "Eres Astra, una astróloga y guía espiritual. Evitar respuestas largas. Primero que nada preguntar fecha hora y ubicacion de nacimiento. Leer carta astral para esos datos online y cargarlos en memoria. intenta finalizar con una pregunta, y recopilar informacion durante un rato. Luego despues de diez minutos de charla da algunos consejos y pregunta si lo puedes ayudar en algo mas. Tirar una carta de tarot, Describir su imagen, y su significado ",
+                prompt: "Eres Astra, una astróloga y guía espiritual. Evitar respuestas largas. Primero que nada preguntar fecha hora y ubicacion de nacimiento. Leer carta astral para esos datos online y cargarlos en memoria. intenta finalizar con una pregunta, y recopilar informacion durante un rato. Luego de unos minutos de charla da algunos consejos y pregunta si lo puedes ayudar en algo mas. Tirar una carta de tarot de la siguiente lista {'Arcanos mayores': ['El Loco', 'El Mago', 'La Sacerdotisa', 'La Emperatriz', 'El Emperador', 'El Hierofante', 'Los Enamorados', 'El Carro', 'La Fuerza', 'El Ermitaño', 'La Rueda de la Fortuna', 'La Justicia', 'El Colgado', 'La Muerte', 'La Templanza', 'El Diablo', 'La Torre', 'La Estrella', 'La Luna', 'El Sol', 'El Juicio', 'El Mundo'], 'Arcanos Menores': {'Bastos': ['As de Bastos', 'Dos de Bastos', 'Tres de Bastos', 'Cuatro de Bastos', 'Cinco de Bastos', 'Seis de Bastos', 'Siete de Bastos', 'Ocho de Bastos', 'Nueve de Bastos', 'Diez de Bastos', 'Sota de Bastos', 'Caballo de Bastos', 'Reina de Bastos', 'Rey de Bastos'], 'Copas': ['As de Copas', 'Dos de Copas', 'Tres de Copas', 'Cuatro de Copas', 'Cinco de Copas', 'Seis de Copas', 'Siete de Copas', 'Ocho de Copas', 'Nueve de Copas', 'Diez de Copas', 'Sota de Copas', 'Caballo de Copas', 'Reina de Copas', 'Rey de Copas'], 'Espadas': ['As de Espadas', 'Dos de Espadas', 'Tres de Espadas', 'Cuatro de Espadas', 'Cinco de Espadas', 'Seis de Espadas', 'Siete de Espadas', 'Ocho de Espadas', 'Nueve de Espadas', 'Diez de Espadas', 'Sota de Espadas', 'Caballo de Espadas', 'Reina de Espadas', 'Rey de Espadas'], 'Oros (Pentáculos)': ['As de Oros', 'Dos de Oros', 'Tres de Oros', 'Cuatro de Oros', 'Cinco de Oros', 'Seis de Oros', 'Siete de Oros', 'Ocho de Oros', 'Nueve de Oros', 'Diez de Oros', 'Sota de Oros', 'Caballo de Oros', 'Reina de Oros', 'Rey de Oros']}}. Describir su imagen, y su significado. Asegurar que la carta de tarot sea elegida de forma aleatoria entre las de la lsita. ",
                 welcome: "Te doy la bienvenida. Soy Astra."
             },
             profesor: {
@@ -196,33 +196,25 @@
             const [isProfileModalVisible, setProfileModalVisible] = React.useState(false);
             const chatContainerRef = React.useRef(null);
 
-            // --- CORREGIDO: Manejo unificado del botón "Atrás" ---
+            // Manejo del botón "Atrás" del navegador para mostrar modal de confirmación
             React.useEffect(() => {
-                // Al entrar al chat, nos aseguramos de tener una entrada en el historial
-                // para poder interceptar el botón "atrás".
                 if (window.history.state?.screen !== 'chat') {
                     window.history.pushState({ screen: 'chat' }, '', '#chat');
                 }
 
                 const handleBrowserBack = (event) => {
-                    // Cuando el usuario intenta volver atrás (sea por el botón del navegador o el de la UI)...
-                    
-                    // 1. Inmediatamente lo "empujamos" de nuevo a la pantalla de chat en el historial.
-                    // Esto previene que la pantalla cambie mientras el modal está visible.
                     window.history.pushState({ screen: 'chat' }, '', '#chat');
-                    
-                    // 2. Mostramos nuestro modal de confirmación.
                     setShowExitModal(true);
                 };
 
                 window.addEventListener('popstate', handleBrowserBack);
 
-                // Limpieza: Se ejecuta cuando el componente se desmonta.
                 return () => {
                     window.removeEventListener('popstate', handleBrowserBack);
                 };
-            }, []); // Se ejecuta solo una vez al montar el componente.
+            }, []);
 
+            // Scroll automático al final del chat
             React.useEffect(() => {
                 if (chatContainerRef.current) {
                     chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -230,8 +222,6 @@
             }, [messages]);
 
             const handleConfirmExit = () => {
-                // Esta es la función que realmente cambia de pantalla.
-                // Se llama solo después de que el usuario confirma en el modal.
                 onBack();
             };
 
@@ -249,7 +239,7 @@
                     if (!apiKey) {
                         throw new Error("La clave de API no está configurada.");
                     }
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`;
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
                     
                     const apiHistory = newMessages.map(msg => ({
                         role: msg.role === 'user' ? 'user' : 'model',
@@ -313,7 +303,6 @@
             return (
                 <div className="w-full h-full flex flex-col bg-gray-50">
                     <header className="flex items-center p-3 border-b border-gray-200 bg-white flex-shrink-0">
-                        {/* --- CAMBIO AQUÍ: El botón ahora usa el historial del navegador --- */}
                         <button onClick={() => window.history.back()} className="p-2 rounded-full hover:bg-gray-200 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
                         </button>
@@ -327,7 +316,17 @@
                             </button>
                             {showMenu && (
                                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg z-20 border border-gray-100">
-                                    <a href="#" onClick={saveConversationToFile} className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors">Guardar conversación</a>
+                                    {/* --- CORRECCIÓN DEL BUG --- */}
+                                    <a 
+                                        href="#" 
+                                        onClick={(e) => {
+                                            e.preventDefault(); // Previene la navegación del href="#" que activaba el modal
+                                            saveConversationToFile();
+                                        }} 
+                                        className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                    >
+                                        Guardar conversación
+                                    </a>
                                 </div>
                             )}
                         </div>
@@ -430,6 +429,7 @@
         // --- COMPONENTE PRINCIPAL DE LA APLICACIÓN ---
         function App() {
             // --- CLAVE DE API ---
+            // IMPORTANTE: Reemplaza "TU_API_KEY_AQUI" con tu clave real de la API de Google Gemini.
             const apiKey = "AIzaSyDbHW8acWDhb_9EiC82RfIOCaYNh5QwORg"; // Reemplaza con tu clave
             
             const [currentScreen, setCurrentScreen] = React.useState('selection');
@@ -462,7 +462,7 @@
             };
 
             const handleCharacterSelect = (charId) => {
-                if (!apiKey) {
+                if (!apiKey || apiKey === "TU_API_KEY_AQUI") {
                    const modal = document.createElement('div');
                    modal.innerHTML = `
                         <div style="position: fixed; inset: 0; background-color: rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index: 100;">
@@ -483,9 +483,7 @@
             const handleBackToSelection = () => {
                 setSelectedCharacter(null);
                 setCurrentScreen('selection');
-                // --- CAMBIO AQUÍ: Limpiamos el historial para quitar el #chat de la URL ---
                 if (window.location.hash === '#chat') {
-                    // Usamos replaceState para no crear una nueva entrada en el historial
                     window.history.replaceState(null, '', window.location.pathname);
                 }
             };
