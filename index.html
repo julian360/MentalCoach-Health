@@ -150,7 +150,6 @@
         const CharacterSelectionScreen = ({ onCharacterSelect, user, onLogin, onLogout, onInstall, canInstall }) => (
             <div className="w-full min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 homepage-gradient-bg">
               <div className="absolute top-5 left-5 z-20 ">
-            {/* --- CAMBIO REALIZADO: La ruta 'src' ahora es una cadena de texto que apunta a la carpeta public --- */}
             <img src="/MentalCoachHealth/icons/Logo.png" alt="Logo Mental Coach & Health" className="h-14 lg:h-20 w-auto" />
         </div>
                 <div className="absolute top-5 right-5 z-20">
@@ -209,12 +208,14 @@
             const chatContainerRef = React.useRef(null);
             const popstateHandler = React.useRef(null);
             const conversationIdRef = React.useRef(null);
+            // --- MODIFICACIÓN: useRef para rastrear si el preámbulo del historial ya se envió ---
+            const sentHistoryPreamble = React.useRef(false);
             const { db, doc, getDoc, setDoc, serverTimestamp } = window.firebaseServices;
 
             // Cargar conversación existente de Firestore
             React.useEffect(() => {
                 const loadConversation = async () => {
-                    if (user && userConsent && db) { // Check if db is available
+                    if (user && userConsent && db) { 
                         setIsLoading(true);
                         const convId = `${user.uid}_${character.id}`;
                         conversationIdRef.current = convId;
@@ -287,6 +288,7 @@
                 }
             };
 
+            // --- MODIFICACIÓN: Lógica de envío de mensajes actualizada ---
             const handleSendMessage = async (e) => {
                 e.preventDefault();
                 const userMessage = inputValue.trim();
@@ -299,12 +301,44 @@
 
                 await saveConversationToFirestore(newMessages);
 
+                let messageForApi = userMessage;
+
+                // Comprueba si aún no hemos enviado el preámbulo del historial en esta sesión.
+                if (!sentHistoryPreamble.current) {
+                    // Obtiene los últimos 10 mensajes del estado ANTES de agregar el nuevo.
+                    const historyToAppend = messages.slice(-120);
+                    
+                    // Solo adjunta el historial si hay algo significativo que adjuntar.
+                    // El estado inicial es 1 mensaje de bienvenida, por lo que length > 1 significa que hay historial.
+                    if (historyToAppend.length > 1) {
+                        const formattedHistory = historyToAppend.map(msg => {
+                            const prefix = msg.role === 'user' ? 'Usuario' : 'IA';
+                            return `${prefix}: ${msg.text}`;
+                        }).join('\n');
+
+                        const preamble = `Nuestro historial de conversacion\n"${formattedHistory}"\nToma en cuenta la informacion de estas conversaciones. No digas nada al respecto. Iniciamos conversacion nueva: `;
+                        
+                        // El mensaje final para la API incluye el preámbulo y el mensaje real del usuario.
+                        messageForApi = `${preamble}\n\n${userMessage}`;
+                    }
+                    // Marca que ya hemos enviado el preámbulo para esta sesión.
+                    sentHistoryPreamble.current = true;
+                }
+
                 try {
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`;
+                    
+                    // El historial de la API se basa en los mensajes de la interfaz de usuario...
                     const apiHistory = newMessages.map(msg => ({
                         role: msg.role === 'user' ? 'user' : 'model',
                         parts: [{ text: msg.text }]
                     }));
+
+                    // ...pero reemplazamos el texto del último mensaje (el nuevo del usuario) con nuestra versión modificada.
+                    if (apiHistory.length > 0) {
+                        apiHistory[apiHistory.length - 1].parts[0].text = messageForApi;
+                    }
+
                     const payload = {
                         contents: apiHistory,
                         system_instruction: { parts: [{ text: character.prompt }] },
@@ -409,12 +443,10 @@
             const [userConsent, setUserConsent] = React.useState(null); 
             const [isAuthLoading, setIsAuthLoading] = React.useState(true);
             const [installPrompt, setInstallPrompt] = React.useState(null);
-            // ===== NUEVO ESTADO: Para saber si la app ya está instalada =====
             const [isInstalled, setIsInstalled] = React.useState(false);
             
             const firebaseServices = window.firebaseServices;
 
-            // Hook para capturar el evento de instalación
             React.useEffect(() => {
                 const handler = e => {
                     e.preventDefault();
@@ -426,7 +458,6 @@
                 return () => window.removeEventListener("beforeinstallprompt", handler);
             }, []);
 
-            // ===== NUEVO HOOK: Para verificar si la app se ejecuta en modo standalone (instalada) =====
             React.useEffect(() => {
                 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
                 if (isStandalone) {
@@ -435,7 +466,6 @@
                 }
             }, []);
 
-            // Hook para el estado de autenticación de Firebase
             React.useEffect(() => {
                 if (!firebaseServices.auth) {
                     console.error("Servicios de Firebase no disponibles.");
@@ -542,7 +572,6 @@
                             onLogin={handleGoogleLogin}
                             onLogout={handleLogout}
                             onInstall={handleInstallClick}
-                            // ===== LÓGICA ACTUALIZADA: El botón se muestra si hay un prompt Y la app no está instalada =====
                             canInstall={!!installPrompt && !isInstalled}
                         />
                     ) : (
