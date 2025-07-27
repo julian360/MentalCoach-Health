@@ -1,7 +1,7 @@
 // service-worker.js
 
 // Nombre de la caché para nuestra aplicación
-const CACHE_NAME = 'mental-coach-health-v1.3.34'; // Versión actualizada para forzar la actualización
+const CACHE_NAME = 'mental-coach-health-v1.4.0'; // Versión actualizada para forzar la actualización
 
 // Archivos y recursos que queremos guardar en la caché con rutas relativas
 const urlsToCache = [
