@@ -1,7 +1,7 @@
 {
-  "name": "Mental Coach & Health",
-  "short_name": "Mental Coach & Health",
-  "description": "Conversar con especialistas en IA para mejorar tu bienestar.",
+  "name": "Mental Coach AI Health App",
+  "short_name": "Mental Coach AI",
+  "description": "Conversar con especialistas en IA para mejorar el bienestar.",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#f0f2f5",
