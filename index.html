@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mental Coach & Health App</title>
+    <title>Mental Coach AI Health App</title>
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
-      <link rel="icon" href="/MentalCoachHealth/icons/Logo.png?">
-      <link rel="icon" href="/MentalCoachHealth/icons/Logo.png?v=1.1"> 
+      <link rel="icon" href="/MentalCoachAI/icons/Logo.png?">
+      <link rel="icon" href="/MentalCoachAI/icons/Logo.png?v=1.1"> 
     <meta name="theme-color" content="#86a8e7">
 
     <!-- Tailwind CSS -->
@@ -97,28 +97,28 @@
             psicoanalista: {
                 id: "psicoanalista",
                 name: "Psicoanalista",
-                image: "/MentalCoachHealth/icons/psicoanalista.png",
+                image: "/MentalCoachAI/icons/psicoanalista.png",
                 prompt: "Eres un psicoanalista de la escuela freudiana. Respuestas que hacen reflexionar. pero no hagas respuestas largas. Intenta finalizar con una pregunta, y recopilar informacion durante un rato. A veces da algunos consejos.",
                 welcome: "Adelante, póngase cómodo. Cuénteme, ¿qué le trae por aquí hoy?"
             },
             coaching: {
                 id: "coaching",
                 name: "Coach",
-                image: "/MentalCoachHealth/icons/Coach.png",
+                image: "/MentalCoachAI/icons/Coach.png",
                 prompt: "Eres un coach motivacional y de vida... enfoque mas fisico, salud fisica y salud mental.  sin respuestas largas. busca libros sobre habitos y coaching. finaliza con una pregunta y recopila informacion durante un rato. da algunos consejos y pregunta si lo puedes ayudar en algo mas..  ",
                 welcome: "¡Hola! ¿Qué buscas lograr hoy?"
             },
             astra: {
                 id: "astra",
                 name: "Astra",
-                image: "/MentalCoachHealth/icons/Astra.png",
+                image: "/MentalCoachAI/icons/Astra.png",
                 prompt: "Eres Astra, una astróloga y guía espiritual. Evitar respuestas largas. Primero que nada preguntar fecha hora y ubicacion de nacimiento. Leer carta astral para esos datos online y cargarlos en memoria. intenta finalizar con una pregunta, y recopilar informacion durante un rato. Luego de unos minutos de charla da algunos consejos y pregunta si lo puedes ayudar en algo mas. Tirar una carta de tarot de la siguiente lista {'Arcanos mayores': ['El Loco', 'El Mago', 'La Sacerdotisa', 'La Emperatriz', 'El Emperador', 'El Hierofante', 'Los Enamorados', 'El Carro', 'La Fuerza', 'El Ermitaño', 'La Rueda de la Fortuna', 'La Justicia', 'El Colgado', 'La Muerte', 'La Templanza', 'El Diablo', 'La Torre', 'La Estrella', 'La Luna', 'El Sol', 'El Juicio', 'El Mundo'], 'Arcanos Menores': {'Bastos': ['As de Bastos', 'Dos de Bastos', 'Tres de Bastos', 'Cuatro de Bastos', 'Cinco de Bastos', 'Seis de Bastos', 'Siete de Bastos', 'Ocho de Bastos', 'Nueve de Bastos', 'Diez de Bastos', 'Sota de Bastos', 'Caballo de Bastos', 'Reina de Bastos', 'Rey de Bastos'], 'Copas': ['As de Copas', 'Dos de Copas', 'Tres de Copas', 'Cuatro de Copas', 'Cinco de Copas', 'Seis de Copas', 'Siete de Copas', 'Ocho de Copas', 'Nueve de Copas', 'Diez de Copas', 'Sota de Copas', 'Caballo de Copas', 'Reina de Copas', 'Rey de Copas'], 'Espadas': ['As de Espadas', 'Dos de Espadas', 'Tres de Espadas', 'Cuatro de Espadas', 'Cinco de Espadas', 'Seis de Espadas', 'Siete de Espadas', 'Ocho de Espadas', 'Nueve de Espadas', 'Diez de Espadas', 'Sota de Espadas', 'Caballo de Espadas', 'Reina de Espadas', 'Rey de Espadas'], 'Oros (Pentáculos)': ['As de Oros', 'Dos de Oros', 'Tres de Oros', 'Cuatro de Oros', 'Cinco de Oros', 'Seis de Oros', 'Siete de Oros', 'Ocho de Oros', 'Nueve de Oros', 'Diez de Oros', 'Sota de Oros', 'Caballo de Oros', 'Reina de Oros', 'Rey de Oros']}}. Describir su imagen, y su significado. Asegurar que la carta de tarot sea elegida de forma aleatoria entre las de la lsita. ",
                 welcome: "Te doy la bienvenida. Soy Astra."
             },
             profesor: {
                 id: "profesor",
                 name: "Profesor",
-                image: "/MentalCoachHealth/icons/Profesor.png",
+                image: "/MentalCoachAI/icons/Profesor.png",
                 prompt: "Ciudadano muy directo, práctico. no anda con vueltas. frio pero buena persona. Dira verdades incomodas sin escrupulos. Ayudara a resolver problemas dando consejos. Respuestas cortas y concisas. Preguntar al usuario de donde es, para tener un mejor contexto. Consejos extremos. picante. intenta finalizar con una pregunta, y recopilar informacion durante un rato y finalmente da algunos consejos concretos.",
                 welcome: "Hola, soy un ciudadano retirado de 70 años. ¿Necesitas un consejo?"
             }
@@ -150,7 +150,7 @@
         const CharacterSelectionScreen = ({ onCharacterSelect, user, onLogin, onLogout, onInstall, canInstall }) => (
             <div className="w-full min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 homepage-gradient-bg">
               <div className="absolute top-5 left-5 z-20 ">
-            <img src="/MentalCoachHealth/icons/Logo.png" alt="Logo Mental Coach & Health" className="h-14 lg:h-20 w-auto" />
+            <img src="/MentalCoachAI/icons/Logo.png" alt="Logo Mental Coach AI" className="h-14 lg:h-20 w-auto" />
         </div>
                 <div className="absolute top-5 right-5 z-20">
                     {user ? (
@@ -167,7 +167,7 @@
                     )}
                 </div>
                 <div className="text-center z-10 w-full">
-                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-black mb-3 tracking-tight">Mental <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 bg-clip-text text-transparent">Coach & Health</span></h1>
+                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-black mb-3 tracking-tight">Mental <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 bg-clip-text text-transparent">Coach AI</span></h1>
                     <p className="text-[rgb(71_69_72/80%)] text-lg sm:text-xl max-w-2xl mx-auto mb-12">Elige un especialista para iniciar una conversación transformadora.</p>
                     <div className="grid grid-cols-2 scale-105 sm:scale-125 mt-5 sm:mt-[100px] md:grid-cols-4 gap-5 md:gap-8 w-full max-w-sm md:max-w-4xl mx-auto">
                         {Object.values(characterPersonalities).map(char => <CharacterCard key={char.id} character={char} onSelect={onCharacterSelect} />)}
@@ -435,7 +435,7 @@
         };
 
         function App() {
-            const apiKey = "AIzaSyDbHW8acWDhb_9EiC82RfIOCaYNh5QwORg"; // Reemplaza con tu clave de Gemini
+            const apiKey = "AIzaSyDbHW8acWDhb_9EiC82RfIOCaYNh5QwORg"; //Api Gemini
             
             const [currentScreen, setCurrentScreen] = React.useState('selection');
             const [selectedCharacter, setSelectedCharacter] = React.useState(null);
