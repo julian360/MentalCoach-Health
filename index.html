@@ -130,7 +130,48 @@
             </div>
         );
         
-        // MODIFICADO: El modal ahora solo tiene la opción de Aceptar.
+        // NUEVO: Componente para el modal de beneficios Premium
+        const PremiumModal = ({ onClose }) => (
+            <div className="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center p-4 z-50" onClick={onClose}>
+                <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-left relative" onClick={(e) => e.stopPropagation()}>
+                    <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                    <div className="text-center mb-6">
+                   <h3 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-black mb-3 tracking-tight">
+  Mental <span class="bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 bg-clip-text text-transparent">Coach AI</span>
+</h3>
+                    <p className="text-gray-500 mt-2 mb-2"> Esto no es ChatGPT. El asistente guarda información del usuario y establece una relación con el mismo, siendo conciente de todo su proceso en cada respuesta</p>
+                        <h3 className="text-3xl font-bold text-gray-800">Beneficios Premium ✨</h3>
+                        <p className="text-gray-500 mt-2">Desbloquea todo el potencial de tu asistente.</p>
+                    </div>
+                    <ul className="space-y-4 mb-8">
+                        <li className="flex items-center">
+                            <svg className="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                            <span className="text-gray-700">Mensajes ilimitados</span>
+                        </li>
+                        <li className="flex items-center">
+                            <svg className="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                            <span className="text-gray-700">Sin anuncios</span>
+                        </li>
+                        <li className="flex items-center">
+                            <svg className="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                            <span className="text-gray-700">Supermemoria para el asistente y seguimiento detallado</span>
+                        </li>
+                        <li className="flex items-center">
+                            <svg className="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                            <span className="text-gray-700">Nuevas funciones desbloqueadas</span>
+                        </li>
+                    </ul>
+                    <div className="flex justify-center">
+                        <button onClick={() => { /* Por ahora no hace nada */ }} className="w-full px-8 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 duration-300">
+                            Suscribirse a Premium
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+
         const ConsentModal = ({ onConsent }) => (
             <div className="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center p-4 z-50">
                 <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
@@ -166,9 +207,10 @@
         );
 
 
-        const CharacterSelectionScreen = ({ onCharacterSelect, user, onLogin, onLogout, onInstall, canInstall }) => (
+        const CharacterSelectionScreen = ({ onCharacterSelect, user, onLogin, onLogout, onInstall, canInstall, onLogoClick }) => (
             <div className="w-full min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 homepage-gradient-bg">
-              <div className="absolute top-5 left-5 z-20 ">
+              {/* MODIFICADO: Se agrega onClick y cursor-pointer al logo */}
+              <div className="absolute top-5 left-5 z-20 cursor-pointer" onClick={onLogoClick}>
                 <img src="/MentalCoachAI/icons/Logo.png" alt="Logo Mental Coach AI" className="h-14 lg:h-20 w-auto" />
               </div>
                 <div className="absolute top-5 right-5 z-20">
@@ -468,6 +510,7 @@
             const [isAuthLoading, setIsAuthLoading] = React.useState(true);
             const [installPrompt, setInstallPrompt] = React.useState(null);
             const [isInstalled, setIsInstalled] = React.useState(false);
+            const [isPremiumModalOpen, setIsPremiumModalOpen] = React.useState(false); // NUEVO: Estado para el modal premium
             
             const [messageLimit, setMessageLimit] = React.useState({ count: 0, limit: 5, canSend: false, isLoading: true });
             const [userIdentifier, setUserIdentifier] = React.useState(null);
@@ -503,7 +546,7 @@
                     }
 
                     const limits = {
-                        anonymous: 5,
+                        anonymous: 3,
                         identified: 20, // Límite diario
                         premium: 1000 // Límite diario
                     };
@@ -678,6 +721,9 @@
                     {/* MODIFICADO: La condición ahora muestra el modal si el consentimiento es nulo (nuevo) o falso (rechazado previamente) */}
                     {user && (userConsent === null || userConsent === false) && <ConsentModal onConsent={handleSetConsent} />}
                     
+                    {/* NUEVO: Renderizado condicional del modal Premium */}
+                    {isPremiumModalOpen && <PremiumModal onClose={() => setIsPremiumModalOpen(false)} />}
+                    
                     {currentScreen === 'selection' ? (
                         <CharacterSelectionScreen 
                             onCharacterSelect={handleCharacterSelect}
@@ -686,6 +732,7 @@
                             onLogout={handleLogout}
                             onInstall={handleInstallClick}
                             canInstall={!!installPrompt && !isInstalled}
+                            onLogoClick={() => setIsPremiumModalOpen(true)} // NUEVO: Prop para abrir el modal
                         />
                     ) : (
                         <ChatScreen 
