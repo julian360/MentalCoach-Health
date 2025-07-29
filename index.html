@@ -137,7 +137,7 @@
                     <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
-                    <div className="text-center mb-6">
+                    <div className="text-center mb-4">
                    <h3 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-black mb-3 tracking-tight">
   Mental <span class="bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 bg-clip-text text-transparent">Coach AI</span>
 </h3>
@@ -713,7 +713,7 @@
             };
             
             if (isAuthLoading || messageLimit.isLoading) {
-                return <div className="w-full h-full flex items-center justify-center bg-gray-100"><p className="text-lg text-gray-600">Cargando aplicación...</p></div>
+                return <div className="w-full h-full flex items-center justify-center homepage-gradient-bg"><p className="text-lg text-gray-600">Cargando...</p></div>
             }
 
             return (
