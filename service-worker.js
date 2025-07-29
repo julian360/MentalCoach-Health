@@ -1,772 +1,94 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mental Coach AI</title>
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="/MentalCoachAI/icons/Logo.png?v=1.1"> 
-    <meta name="theme-color" content="#86a8e7">
+// service-worker.js
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <!-- React y ReactDOM desde CDN -->
-    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
-    
-    <!-- Babel (para transpilar JSX en el navegador) -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+// Nombre de la caché para nuestra aplicación
+const CACHE_NAME = 'mental-coach-ai-v1.5.01'; // Versión actualizada para forzar la actualización
 
-    <!-- Firebase SDKs -->
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+// Archivos y recursos que queremos guardar en la caché con rutas relativas
+const urlsToCache = [
+  './',
+  'index.html',
+  'manifest.json',
+  // ===== RUTAS CORREGIDAS (sin la carpeta del proyecto) =====
+  'icons/Logo.png', 
+  'icons/psicoanalista.png',
+  'icons/Coach.png',
+  'icons/Astra.png',
+  'icons/Profesor.png',
+  // =======================================================
+  'https://cdn.tailwindcss.com',
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap',
+  'https://unpkg.com/react@18/umd/react.development.js',
+  'https://unpkg.com/react-dom@18/umd/react-dom.development.js',
+  'https://unpkg.com/@babel/standalone/babel.min.js'
+];
 
-        // ** IMPORTANTE: REEMPLAZA ESTO CON LA CONFIGURACIÓN DE TU PROYECTO DE FIREBASE **
-        const firebaseConfig = {
-             apiKey: "AIzaSyAz4hjDKd0rtuPyXKtFfmpSpFNrP_POXPk",
-             authDomain: "mentalcoachhealth.firebaseapp.com",
-             projectId: "mentalcoachhealth",
-             storageBucket: "mentalcoachhealth.appspot.com",
-             messagingSenderId: "559520457250",
-             appId: "1:559520457250:web:448e1ec9e68fca8d1ca07b",
-             measurementId: "G-BSE4FCLRCJ"
-        };
+// Evento 'install': Se dispara cuando el service worker se registra por primera vez.
+self.addEventListener('install', event => {
+  console.log('Service Worker: Instalando...');
+  // skipWaiting() fuerza al nuevo service worker a activarse inmediatamente.
+  self.skipWaiting(); 
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('Service Worker: Abriendo caché y guardando archivos...');
+        // Agregamos todos los archivos de nuestra lista a la caché.
+        return cache.addAll(urlsToCache);
+      })
+      .catch(err => {
+        console.error('Service Worker: Falló el cacheo de archivos durante la instalación', err);
+      })
+  );
+});
 
-        // Initialize Firebase
-        try {
-            const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const db = getFirestore(app);
-            
-            // Make Firebase services available globally for React components
-            window.firebaseServices = { auth, db, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp };
-        } catch (e) {
-            console.error("Error inicializando Firebase. Asegúrate de que tu 'firebaseConfig' es correcto.", e);
-            // Provide dummy services if initialization fails to prevent crashes
-            window.firebaseServices = {};
-        }
-    </script>
-    
-    <style>
-        body, html, #root {
-            font-family: 'Inter', sans-serif;
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f2f5;
-        }
-        .homepage-gradient-bg {
-            background-color: #7f7fd5;
-            background-image: linear-gradient(to top, #86a8e7 0%, #91eae4 100%);
-            overflow: hidden;
-            position: relative;
-        }
-        .homepage-gradient-bg::before,
-        .homepage-gradient-bg::after {
-            content: '';
-            position: absolute;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            z-index: 0;
-            filter: blur(60px);
-        }
-        .homepage-gradient-bg::before { width: 300px; height: 300px; top: -100px; left: -100px; }
-        .homepage-gradient-bg::after { width: 400px; height: 400px; bottom: -150px; right: -150px; background: rgba(255, 255, 255, 0.15); }
-    </style>
-</head>
-<body>
-    <div id="root"></div>
+// Evento 'activate': Se dispara cuando el service worker se activa.
+// Se usa para limpiar cachés antiguas.
+self.addEventListener('activate', event => {
+  console.log('Service Worker: Activando...');
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          // Si la caché no está en nuestra "lista blanca", la borramos.
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            console.log('Service Worker: Borrando caché antigua:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => {
+        // Le dice al service worker que empiece a controlar la página inmediatamente.
+        return self.clients.claim();
+    })
+  );
+});
 
-    <script type="text/babel">
-    
-        const characterPersonalities = {
-            psicoanalista: {
-                id: "psicoanalista",
-                name: "Psicoanalista",
-                image: "/MentalCoachAI/icons/psicoanalista.png",
-                prompt: "Eres un psicoanalista de la escuela freudiana. Respuestas que hacen reflexionar. pero no hagas respuestas largas. Intenta finalizar con una pregunta, y recopilar informacion durante un rato. A veces da algunos consejos.",
-                welcome: "Adelante, póngase cómodo. Cuénteme, ¿qué le trae por aquí hoy?"
-            },
-            coaching: {
-                id: "coaching",
-                name: "Coach",
-                image: "/MentalCoachAI/icons/Coach.png",
-                prompt: "Eres un coach motivacional y de vida... enfoque mas fisico, salud fisica y salud mental.  sin respuestas largas. busca libros sobre habitos y coaching. finaliza con una pregunta y recopila informacion durante un rato. da algunos consejos y pregunta si lo puedes ayudar en algo mas..  ",
-                welcome: "¡Hola! ¿Qué buscas lograr hoy?"
-            },
-            astra: {
-                id: "astra",
-                name: "Astra",
-                image: "/MentalCoachAI/icons/Astra.png",
-                prompt: "Eres Astra, una astróloga y guía espiritual. Evitar respuestas largas. Primero que nada preguntar fecha hora y ubicacion de nacimiento. Leer carta astral para esos datos online y cargarlos en memoria. intenta finalizar con una pregunta, y recopilar informacion durante un rato. Luego de unos minutos de charla da algunos consejos y pregunta si lo puedes ayudar en algo mas. Tirar una carta de tarot de la siguiente lista {'Arcanos mayores': ['El Loco', 'El Mago', 'La Sacerdotisa', 'La Emperatriz', 'El Emperador', 'El Hierofante', 'Los Enamorados', 'El Carro', 'La Fuerza', 'El Ermitaño', 'La Rueda de la Fortuna', 'La Justicia', 'El Colgado', 'La Muerte', 'La Templanza', 'El Diablo', 'La Torre', 'La Estrella', 'La Luna', 'El Sol', 'El Juicio', 'El Mundo'], 'Arcanos Menores': {'Bastos': ['As de Bastos', 'Dos de Bastos', 'Tres de Bastos', 'Cuatro de Bastos', 'Cinco de Bastos', 'Seis de Bastos', 'Siete de Bastos', 'Ocho de Bastos', 'Nueve de Bastos', 'Diez de Bastos', 'Sota de Bastos', 'Caballo de Bastos', 'Reina de Bastos', 'Rey de Bastos'], 'Copas': ['As de Copas', 'Dos de Copas', 'Tres de Copas', 'Cuatro de Copas', 'Cinco de Copas', 'Seis de Copas', 'Siete de Copas', 'Ocho de Copas', 'Nueve de Copas', 'Diez de Copas', 'Sota de Copas', 'Caballo de Copas', 'Reina de Copas', 'Rey de Copas'], 'Espadas': ['As de Espadas', 'Dos de Espadas', 'Tres de Espadas', 'Cuatro de Espadas', 'Cinco de Espadas', 'Seis de Espadas', 'Siete de Espadas', 'Ocho de Espadas', 'Nueve de Espadas', 'Diez de Espadas', 'Sota de Espadas', 'Caballo de Espadas', 'Reina de Espadas', 'Rey de Espadas'], 'Oros (Pentáculos)': ['As de Oros', 'Dos de Oros', 'Tres de Oros', 'Cuatro de Oros', 'Cinco de Oros', 'Seis de Oros', 'Siete de Oros', 'Ocho de Oros', 'Nueve de Oros', 'Diez de Oros', 'Sota de Oros', 'Caballo de Oros', 'Reina de Oros', 'Rey de Oros']}}. Describir su imagen, y su significado. Asegurar que la carta de tarot sea elegida de forma aleatoria entre las de la lsita. ",
-                welcome: "Te doy la bienvenida. Soy Astra."
-            },
-            profesor: {
-                id: "profesor",
-                name: "Profesor",
-                image: "/MentalCoachAI/icons/Profesor.png",
-                prompt: "Ciudadano muy directo, práctico. no anda con vueltas. frio pero buena persona. Dira verdades incomodas sin escrupulos. Ayudara a resolver problemas dando consejos. Respuestas cortas y concisas. Preguntar al usuario de donde es, para tener un mejor contexto. Consejos extremos. picante. intenta finalizar con una pregunta, y recopilar informacion durante un rato y finalmente da algunos consejos concretos.",
-                welcome: "Hola, soy un ciudadano retirado de 70 años. ¿Necesitas un consejo?"
+// Evento 'fetch': Se dispara cada vez que la página realiza una petición de red.
+self.addEventListener('fetch', event => {
+  // Solo manejamos peticiones GET
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
+  event.respondWith(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.match(event.request)
+        .then(response => {
+          // Si encontramos una respuesta en la caché, la devolvemos.
+          if (response) {
+            return response;
+          }
+
+          // Si no está en la caché, hacemos la petición a la red.
+          return fetch(event.request).then(networkResponse => {
+            // No cacheamos las respuestas de Firebase para evitar problemas de autenticación.
+            if (!event.request.url.includes('firebase')) {
+                 // Guardamos una copia de la respuesta de red en la caché para usos futuros.
+                cache.put(event.request, networkResponse.clone());
             }
-        };
-
-        // --- COMPONENTES DE REACT ---
-
-        const CharacterCard = ({ character, onSelect }) => (
-            <div className="bg-white/20 backdrop-blur-lg p-5 rounded-3xl shadow-lg hover:shadow-2xl hover:bg-white/30 hover:-translate-y-2 transition-all duration-300 cursor-pointer flex flex-col items-center text-center border border-white/30" onClick={() => onSelect(character.id)}>
-                <img src={character.image} alt={character.name} className="w-32 h-32 sm:w-32 sm:h-32 rounded-full mb-4 border-4 border-white/50 shadow-md object-cover" onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/150x150/cccccc/FFFFFF?text=Error'; }}/>
-                <h3 className="text-xl sm:text-xl font-bold text-white h-14 flex items-center justify-center">{character.name}</h3>
-            </div>
-        );
-        
-        // NUEVO: Componente para el modal de beneficios Premium
-        const PremiumModal = ({ onClose }) => (
-            <div className="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center p-4 z-50" onClick={onClose}>
-                <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-left relative" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                    <div className="text-center mb-6">
-                   <h3 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-black mb-3 tracking-tight">
-  Mental <span class="bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 bg-clip-text text-transparent">Coach AI</span>
-</h3>
-                    <p className="text-gray-500 mt-2 mb-2"> Esto no es ChatGPT. El asistente guarda información del usuario y establece una relación con el mismo, siendo conciente de todo su proceso en cada respuesta</p>
-                        <h3 className="text-3xl font-bold text-gray-800">Beneficios Premium ✨</h3>
-                        <p className="text-gray-500 mt-2">Desbloquea todo el potencial de tu asistente.</p>
-                    </div>
-                    <ul className="space-y-4 mb-8">
-                        <li className="flex items-center">
-                            <svg className="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span className="text-gray-700">Mensajes ilimitados</span>
-                        </li>
-                        <li className="flex items-center">
-                            <svg className="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span className="text-gray-700">Sin anuncios</span>
-                        </li>
-                        <li className="flex items-center">
-                            <svg className="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span className="text-gray-700">Supermemoria para el asistente y seguimiento detallado</span>
-                        </li>
-                        <li className="flex items-center">
-                            <svg className="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                            <span className="text-gray-700">Nuevas funciones desbloqueadas</span>
-                        </li>
-                    </ul>
-                    <div className="flex justify-center">
-                        <button onClick={() => { /* Por ahora no hace nada */ }} className="w-full px-8 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-1 duration-300">
-                            Suscribirse a Premium
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-
-        const ConsentModal = ({ onConsent }) => (
-            <div className="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center p-4 z-50">
-                <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
-                    <h3 className="text-2xl font-bold text-gray-800 mb-4">Aviso de Privacidad</h3>
-                    <p className="text-gray-600 mb-8">Para mejorar tu experiencia y la del asistente, la aplicación guardará el historial de tus conversaciones. Al continuar, aceptas esta condición.</p>
-                    <div className="flex justify-center">
-                        <button onClick={() => onConsent(true)} className="px-8 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors font-semibold">Aceptar</button>
-                    </div>
-                </div>
-            </div>
-        );
-        
-        const LimitReachedModal = ({ user, onLogin, onClose }) => (
-            <div className="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
-                <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center">
-                    <h3 className="text-2xl font-bold text-gray-800 mb-4">Límite diario de Mensajes Alcanzado</h3>
-                    {user ? (
-                        <p className="text-gray-600 mb-8">Vuelve mañana o unete a Premium para mensajes ilimitados y más</p>
-                    ) : (
-                        <p className="text-gray-600 mb-8">Has alcanzado el límite de mensajes para invitados. Por favor, inicia sesión para continuar la conversación.</p>
-                    )}
-                    <div className="flex flex-col items-center justify-center gap-4">
-                        {!user && (
-                             <button onClick={onLogin} className="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-3">
-                                <svg className="w-5 h-5" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C41.38,36.168,44,31.134,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path></svg>
-                                <span>Iniciar sesión con Google</span>
-                            </button>
-                        )}
-                        <button onClick={onClose} className="w-full px-6 py-3 rounded-full bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors font-semibold">Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        );
-
-
-        const CharacterSelectionScreen = ({ onCharacterSelect, user, onLogin, onLogout, onInstall, canInstall, onLogoClick }) => (
-            <div className="w-full min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 homepage-gradient-bg">
-              {/* MODIFICADO: Se agrega onClick y cursor-pointer al logo */}
-              <div className="absolute top-5 left-5 z-20 cursor-pointer" onClick={onLogoClick}>
-                <img src="/MentalCoachAI/icons/Logo.png" alt="Logo Mental Coach AI" className="h-14 lg:h-20 w-auto" />
-              </div>
-                <div className="absolute top-5 right-5 z-20">
-                    {user ? (
-                        <div className="flex items-center gap-3 bg-white/30 backdrop-blur-lg p-2 rounded-full">
-                            <img src={user.photoURL} alt="User" className="w-8 h-8 rounded-full" />
-                            <span className="text-gray-600 font-semibold text-sm hidden sm:block">{user.displayName}</span>
-                            <button onClick={onLogout} className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold hover:bg-red-600 transition">Salir</button>
-                        </div>
-                    ) : (
-                        <button onClick={onLogin} className="bg-white/30 backdrop-blur-lg text-black font-bold py-3 px-6 rounded-full shadow-lg hover:bg-white/50 transition-all duration-300 flex items-center gap-3 mx-auto">
-                            <svg className="w-5 h-5" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"></path><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"></path><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"></path><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l6.19,5.238C41.38,36.168,44,31.134,44,24C44,22.659,43.862,21.35,43.611,20.083z"></path></svg>
-                            <span>Iniciar sesión con Google</span>
-                        </button>
-                    )}
-                </div>
-                <div className="text-center z-10 w-full">
-                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-black mb-3 tracking-tight">Mental <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-red-500 bg-clip-text text-transparent">Coach AI</span></h1>
-                    <p className="text-[rgb(71_69_72/80%)] text-lg sm:text-xl max-w-2xl mx-auto mb-12">Elige un especialista para iniciar una conversación transformadora.</p>
-                    <div className="grid grid-cols-2 scale-105 sm:scale-125 mt-5 sm:mt-[100px] md:grid-cols-4 gap-5 md:gap-8 w-full max-w-sm md:max-w-4xl mx-auto">
-                        {Object.values(characterPersonalities).map(char => <CharacterCard key={char.id} character={char} onSelect={onCharacterSelect} />)}
-                    </div>
-                    {canInstall && (
-                        <div className="mt-16">
-                            <button 
-                                onClick={onInstall}
-                                className="bg-white/30 backdrop-blur-lg text-black font-bold py-3 px-6 rounded-full shadow-lg hover:bg-white/50 transition-all duration-300 flex items-center gap-3 mx-auto"
-                            >
-                                Instalar App 📱
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-        
-        const ChatMessage = ({ message, characterImage, onProfileClick }) => {
-            const isUser = message.role === 'user';
-            const formatText = (text) => text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br />');
-            const messageHTML = { __html: formatText(message.text) };
-            return (
-                <div className={`flex items-start gap-3 mb-4 ${isUser ? 'justify-end' : ''}`}>
-                    {!isUser && (<button onClick={onProfileClick} className="flex-shrink-0 rounded-full transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"><img src={characterImage} alt="Avatar" className="h-8 w-8 rounded-full object-cover" /></button>)}
-                    <div className={`p-3 rounded-lg max-w-xs md:max-w-md break-words shadow ${isUser ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'}`}><p className="text-sm" dangerouslySetInnerHTML={messageHTML}></p></div>
-                    {isUser && (<div className="flex-shrink-0 h-8 w-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-bold">TÚ</div>)}
-                </div>
-            );
-        };
-
-        const ChatScreen = ({ character, onBack, apiKey, user, userConsent, messageLimit, incrementMessageCount, onLogin }) => {
-            const [messages, setMessages] = React.useState([{ role: 'model', text: character.welcome }]);
-            const [inputValue, setInputValue] = React.useState('');
-            const [isLoading, setIsLoading] = React.useState(false);
-            const [showExitModal, setShowExitModal] = React.useState(false);
-            const [isProfileModalVisible, setProfileModalVisible] = React.useState(false);
-            const [showLimitModal, setShowLimitModal] = React.useState(false);
-            const chatContainerRef = React.useRef(null);
-            const popstateHandler = React.useRef(null);
-            const conversationIdRef = React.useRef(null);
-            const sentHistoryPreamble = React.useRef(null);
-            const { db, doc, getDoc, setDoc, serverTimestamp } = window.firebaseServices;
-
-            const canSendMessage = messageLimit.canSend;
-
-            React.useEffect(() => {
-                if (!canSendMessage && !messageLimit.isLoading) {
-                    setShowLimitModal(true);
-                }
-            }, [canSendMessage, messageLimit.isLoading]);
-
-
-            // Cargar conversación existente de Firestore
-            React.useEffect(() => {
-                const loadConversation = async () => {
-                    if (user && userConsent && db) { 
-                        setIsLoading(true);
-                        const convId = `${user.uid}_${character.id}`;
-                        conversationIdRef.current = convId;
-                        const convRef = doc(db, "conversations", convId);
-                        const convSnap = await getDoc(convRef);
-
-                        if (convSnap.exists()) {
-                            const convData = convSnap.data();
-                            if (convData.messages && convData.messages.length > 0) {
-                                setMessages(convData.messages);
-                            }
-                        }
-                        setIsLoading(false);
-                    }
-                };
-                loadConversation();
-            }, [user, userConsent, character.id, db, doc, getDoc]);
-
-            // Manejo del botón "Atrás" del navegador
-            React.useEffect(() => {
-                popstateHandler.current = () => {
-                    if (user) {
-                        onBack();
-                    } else {
-                        window.history.pushState({ screen: 'chat' }, '', '#chat');
-                        setShowExitModal(true);
-                    }
-                };
-
-                if (window.history.state?.screen !== 'chat') {
-                    window.history.pushState({ screen: 'chat' }, '', '#chat');
-                }
-
-                window.addEventListener('popstate', popstateHandler.current);
-
-                return () => {
-                    if (popstateHandler.current) {
-                        window.removeEventListener('popstate', popstateHandler.current);
-                    }
-                     if (window.location.hash === '#chat') {
-                        window.history.replaceState(null, '', window.location.pathname);
-                    }
-                };
-            }, [user, onBack]);
-
-            React.useEffect(() => {
-                if (chatContainerRef.current) {
-                    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-                }
-            }, [messages]);
-
-            const handleConfirmExit = () => {
-                window.history.back();
-                onBack();
-            };
-
-            const saveConversationToFirestore = async (currentMessages) => {
-                if (!user || !userConsent || !conversationIdRef.current || !db) return;
-                try {
-                    const convRef = doc(db, "conversations", conversationIdRef.current);
-                    await setDoc(convRef, { 
-                        userId: user.uid,
-                        characterId: character.id,
-                        characterName: character.name,
-                        messages: currentMessages,
-                        lastUpdated: serverTimestamp()
-                    }, { merge: true });
-                } catch (error) {
-                    console.error("Error guardando la conversación:", error);
-                }
-            };
-
-            const handleSendMessage = async (e) => {
-                e.preventDefault();
-                
-                if (!canSendMessage) {
-                    return; 
-                }
-
-                const userMessage = inputValue.trim();
-                if (!userMessage || isLoading) return;
-
-                const newMessages = [...messages, { role: 'user', text: userMessage }];
-                setMessages(newMessages);
-                setInputValue('');
-                setIsLoading(true);
-
-                await saveConversationToFirestore(newMessages);
-                await incrementMessageCount(); 
-
-                let messageForApi = userMessage;
-
-                if (!sentHistoryPreamble.current) {
-                    const historyToAppend = messages.slice(-10);
-                    if (historyToAppend.length > 1) {
-                        const formattedHistory = historyToAppend.map(msg => `${msg.role === 'user' ? 'Usuario' : 'IA'}: ${msg.text}`).join('\n');
-                        messageForApi = `Nuestro historial de conversacion\n"${formattedHistory}"\nToma en cuenta la informacion de estas conversaciones. No digas nada al respecto. Iniciamos conversacion nueva:  ${userMessage}`;
-                    }
-                    sentHistoryPreamble.current = true;
-                }
-
-                try {
-                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`;
-                    
-                    const apiHistory = newMessages.map(msg => ({
-                        role: msg.role === 'user' ? 'user' : 'model',
-                        parts: [{ text: msg.text }]
-                    }));
-
-                    if (apiHistory.length > 0) {
-                        apiHistory[apiHistory.length - 1].parts[0].text = messageForApi;
-                    }
-
-                    const payload = {
-                        contents: apiHistory,
-                        system_instruction: { parts: [{ text: character.prompt }] },
-                        generationConfig: { temperature: 0.85, topP: 0.9, topK: 40 }
-                    };
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error.message || 'Error en la respuesta de la API');
-                    }
-
-                    const result = await response.json();
-                    let geminiMessage = result.candidates?.[0]?.content?.parts?.[0]?.text || "No se pudo obtener una respuesta.";
-                    
-                    const finalMessages = [...newMessages, { role: 'model', text: geminiMessage }];
-                    setMessages(finalMessages);
-                    await saveConversationToFirestore(finalMessages);
-
-                } catch (error) {
-                    console.error("Error al llamar a Gemini:", error);
-                    setMessages(prev => [...prev, { role: 'model', text: `Lo siento, ocurrió un error: ${error.message}` }]);
-                } finally {
-                    setIsLoading(false);
-                }
-            };
-            
-             return (
-                <div className="w-full h-full flex flex-col bg-gray-50">
-                    <header className="flex items-center p-3 border-b border-gray-200 bg-white flex-shrink-0">
-                        <button onClick={() => window.history.back()} className="p-2 rounded-full hover:bg-gray-200 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                        </button>
-                        <button onClick={() => setProfileModalVisible(true)} className="rounded-full transition-transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                           <img src={character.image} alt="Avatar" className="w-10 h-10 rounded-full mx-3 object-cover"/>
-                        </button>
-                        <div className="flex flex-col">
-                            <h2 className="text-lg font-semibold text-gray-800">{character.name}</h2>
-                            <span className="text-xs text-gray-500">
-                                Mensajes restantes: {messageLimit.limit - messageLimit.count}/{messageLimit.limit}
-                            </span>
-                        </div>
-                    </header>
-                    <div ref={chatContainerRef} className="flex-1 p-4 overflow-y-auto">
-                        {messages.map((msg, index) => (
-                            <ChatMessage 
-                                key={index} 
-                                message={msg} 
-                                characterImage={character.image} 
-                                onProfileClick={() => setProfileModalVisible(true)}
-                            />
-                        ))}
-                        {isLoading && (
-                            <div className="p-4 text-center text-sm text-gray-500">
-                                <div className="flex justify-center items-center gap-2">
-                                    <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <span>Pensando...</span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0">
-                        <form onSubmit={handleSendMessage} className="flex items-center gap-3">
-                            <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} disabled={isLoading || !canSendMessage} className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 disabled:bg-gray-100" placeholder={canSendMessage ? "Escribe tu mensaje..." : "Límite de mensajes alcanzado"} autoComplete="off"/>
-                            <button type="submit" disabled={isLoading || !inputValue || !canSendMessage} className="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300 disabled:cursor-not-allowed">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                            </button>
-                        </form>
-                    </div>
-                     {showExitModal && (
-                        <div className="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-50">
-                            <div className="bg-white rounded-lg shadow-xl p-8 max-w-sm w-full text-center">
-                                <h3 className="text-xl font-bold text-gray-800 mb-4">Confirmar Salida</h3>
-                                <p className="text-gray-600 mb-8">¿Seguro que deseas salir? Tu conversación se borrará si no iniciaste sesión.</p>
-                                <div className="flex justify-center gap-4">
-                                    <button onClick={() => setShowExitModal(false)} className="px-6 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 font-semibold">Cancelar</button>
-                                    <button onClick={handleConfirmExit} className="px-6 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 font-semibold">Sí, Salir</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    {isProfileModalVisible && (
-                        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50" onClick={() => setProfileModalVisible(false)}>
-                            <div className="relative" onClick={(e) => e.stopPropagation()}>
-                                <img src={character.image} alt={character.name} className="max-w-[85vw] max-h-[85vh] rounded-lg shadow-2xl object-contain"/>
-                                <button onClick={() => setProfileModalVisible(false)} className="absolute -top-3 -right-3 bg-white text-gray-800 rounded-full h-8 w-8 flex items-center justify-center text-2xl font-bold shadow-lg hover:bg-gray-200">&times;</button>
-                            </div>
-                        </div>
-                    )}
-                    {showLimitModal && <LimitReachedModal user={user} onLogin={onLogin} onClose={() => setShowLimitModal(false)} />}
-                </div>
-            );
-        };
-
-        function App() {
-            const apiKey = "AIzaSyDbHW8acWDhb_9EiC82RfIOCaYNh5QwORg"; //Api Gemini
-            
-            const [currentScreen, setCurrentScreen] = React.useState('selection');
-            const [selectedCharacter, setSelectedCharacter] = React.useState(null);
-            const [user, setUser] = React.useState(null);
-            const [userConsent, setUserConsent] = React.useState(null); 
-            const [isAuthLoading, setIsAuthLoading] = React.useState(true);
-            const [installPrompt, setInstallPrompt] = React.useState(null);
-            const [isInstalled, setIsInstalled] = React.useState(false);
-            const [isPremiumModalOpen, setIsPremiumModalOpen] = React.useState(false); // NUEVO: Estado para el modal premium
-            
-            const [messageLimit, setMessageLimit] = React.useState({ count: 0, limit: 5, canSend: false, isLoading: true });
-            const [userIdentifier, setUserIdentifier] = React.useState(null);
-
-            const firebaseServices = window.firebaseServices;
-
-            const getDeviceUUID = () => {
-                let uuid = localStorage.getItem('deviceUUID');
-                if (!uuid) {
-                    uuid = crypto.randomUUID();
-                    localStorage.setItem('deviceUUID', uuid);
-                }
-                return uuid;
-            };
-            
-            React.useEffect(() => {
-                if (isAuthLoading || !firebaseServices.db) return;
-
-                const { db, doc, getDoc, setDoc } = firebaseServices;
-                const identifier = user ? user.uid : getDeviceUUID();
-                setUserIdentifier(identifier);
-
-                const checkMessageLimit = async () => {
-                    setMessageLimit(prev => ({ ...prev, isLoading: true }));
-                    const userLimitRef = doc(db, "messageLimits", identifier);
-                    const docSnap = await getDoc(userLimitRef);
-                    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-
-                    let userType = 'anonymous';
-                    if (user) {
-                        // Aquí se podría añadir lógica para 'premium' si existiera en el perfil del usuario
-                        userType = 'identified';
-                    }
-
-                    const limits = {
-                        anonymous: 3,
-                        identified: 20, // Límite diario
-                        premium: 1000 // Límite diario
-                    };
-                    const currentLimit = limits[userType];
-
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        let count = data.count || 0;
-                        const lastReset = data.lastResetDate;
-
-                        if (userType !== 'anonymous' && lastReset !== today) {
-                            count = 0;
-                            await setDoc(userLimitRef, { count: 0, lastResetDate: today }, { merge: true });
-                        }
-                        
-                        setMessageLimit({
-                            count: count,
-                            limit: currentLimit,
-                            canSend: count < currentLimit,
-                            isLoading: false
-                        });
-
-                    } else {
-                        await setDoc(userLimitRef, {
-                            count: 0,
-                            lastResetDate: today,
-                            userType: userType
-                        });
-                        setMessageLimit({
-                            count: 0,
-                            limit: currentLimit,
-                            canSend: true,
-                            isLoading: false
-                        });
-                    }
-                };
-
-                checkMessageLimit();
-
-            }, [user, isAuthLoading, firebaseServices]);
-
-
-            const incrementMessageCount = async () => {
-                if (!userIdentifier || !firebaseServices.db) return;
-
-                const { db, doc, setDoc } = firebaseServices;
-                const newCount = messageLimit.count + 1;
-
-                setMessageLimit(prev => ({
-                    ...prev,
-                    count: newCount,
-                    canSend: newCount < prev.limit
-                }));
-                
-                const userLimitRef = doc(db, "messageLimits", userIdentifier);
-                try {
-                    const today = new Date().toISOString().slice(0, 10);
-                    await setDoc(userLimitRef, { 
-                        count: newCount,
-                        lastResetDate: today 
-                    }, { merge: true });
-
-                } catch(error) {
-                    console.error("Error incrementando el contador de mensajes:", error);
-                }
-            };
-
-            React.useEffect(() => {
-                const handler = e => {
-                    e.preventDefault();
-                    setInstallPrompt(e);
-                };
-                window.addEventListener("beforeinstallprompt", handler);
-                return () => window.removeEventListener("beforeinstallprompt", handler);
-            }, []);
-
-            React.useEffect(() => {
-                const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-                if (isStandalone) setIsInstalled(true);
-            }, []);
-
-            React.useEffect(() => {
-                if (!firebaseServices.auth) {
-                    setIsAuthLoading(false);
-                    return;
-                }
-                const { auth, db, onAuthStateChanged, doc, getDoc } = firebaseServices;
-                const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-                    if (currentUser) {
-                        setUser(currentUser);
-                        const userRef = doc(db, "users", currentUser.uid);
-                        const userSnap = await getDoc(userRef);
-                        if (userSnap.exists()) {
-                            setUserConsent(userSnap.data().saveConversations);
-                        } else {
-                            setUserConsent(null);
-                        }
-                    } else {
-                        setUser(null);
-                        setUserConsent(null);
-                    }
-                    setIsAuthLoading(false);
-                });
-                return () => unsubscribe();
-            }, [firebaseServices]);
-
-            const handleGoogleLogin = async () => {
-                if (!firebaseServices.auth) return;
-                setIsAuthLoading(true);
-                const { auth, GoogleAuthProvider, signInWithPopup } = firebaseServices;
-                const provider = new GoogleAuthProvider();
-                try {
-                    await signInWithPopup(auth, provider);
-                } catch (error) {
-                    console.error("Error durante el inicio de sesión con Google:", error);
-                } finally {
-                    setIsAuthLoading(false);
-                }
-            };
-
-            const handleLogout = async () => {
-                if (!firebaseServices.auth) return;
-                setIsAuthLoading(true);
-                const { auth, signOut } = firebaseServices;
-                try {
-                    await signOut(auth);
-                } catch (error) {
-                    console.error("Error durante el cierre de sesión:", error);
-                } finally {
-                    setIsAuthLoading(false);
-                }
-            };
-
-            const handleSetConsent = async (consent) => {
-                setUserConsent(consent);
-                if (user && firebaseServices.db) {
-                    const { db, doc, setDoc } = firebaseServices;
-                    const userRef = doc(db, "users", user.uid);
-                    try {
-                        await setDoc(userRef, {
-                            displayName: user.displayName,
-                            email: user.email,
-                            saveConversations: consent
-                        }, { merge: true });
-                    } catch (error) {
-                        console.error("Error guardando la preferencia del usuario:", error);
-                    }
-                }
-            };
-            
-            const handleInstallClick = () => {
-                if (!installPrompt) return;
-                installPrompt.prompt();
-            };
-
-            const handleCharacterSelect = (charId) => {
-                setSelectedCharacter(characterPersonalities[charId]);
-                setCurrentScreen('chat');
-            };
-
-            const handleBackToSelection = () => {
-                setSelectedCharacter(null);
-                setCurrentScreen('selection');
-            };
-            
-            if (isAuthLoading || messageLimit.isLoading) {
-                return <div className="w-full h-full flex items-center justify-center bg-gray-100"><p className="text-lg text-gray-600">Cargando aplicación...</p></div>
-            }
-
-            return (
-                <div className="w-full h-full font-sans">
-                    {/* MODIFICADO: La condición ahora muestra el modal si el consentimiento es nulo (nuevo) o falso (rechazado previamente) */}
-                    {user && (userConsent === null || userConsent === false) && <ConsentModal onConsent={handleSetConsent} />}
-                    
-                    {/* NUEVO: Renderizado condicional del modal Premium */}
-                    {isPremiumModalOpen && <PremiumModal onClose={() => setIsPremiumModalOpen(false)} />}
-                    
-                    {currentScreen === 'selection' ? (
-                        <CharacterSelectionScreen 
-                            onCharacterSelect={handleCharacterSelect}
-                            user={user}
-                            onLogin={handleGoogleLogin}
-                            onLogout={handleLogout}
-                            onInstall={handleInstallClick}
-                            canInstall={!!installPrompt && !isInstalled}
-                            onLogoClick={() => setIsPremiumModalOpen(true)} // NUEVO: Prop para abrir el modal
-                        />
-                    ) : (
-                        <ChatScreen 
-                            character={selectedCharacter} 
-                            onBack={handleBackToSelection} 
-                            apiKey={apiKey}
-                            user={user}
-                            userConsent={userConsent}
-                            messageLimit={messageLimit}
-                            incrementMessageCount={incrementMessageCount}
-                            onLogin={handleGoogleLogin}
-                        />
-                    )}
-                </div>
-            );
-        }
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-
-    </script>
-        <!-- Script para registrar el Service Worker -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('service-worker.js')
-                    .then(registration => {
-                        console.log('ServiceWorker: Registration successful with scope: ', registration.scope);
-                    })
-                    .catch(err => {
-                        console.log('ServiceWorker: Registration failed: ', err);
-                    });
-            });
-        }
-    </script>
-</body>
-</html>
+            return networkResponse;
+          });
+        });
+    })
+  );
+});
