@@ -1,7 +1,7 @@
 // service-worker.js
 
 // Nombre de la caché para nuestra aplicación
-const CACHE_NAME = 'mental-coach-ai-v1.5.01'; // Versión actualizada para forzar la actualización
+const CACHE_NAME = 'mental-coach-ai-v1.5.1'; // Versión actualizada para forzar la actualización
 
 // Archivos y recursos que queremos guardar en la caché con rutas relativas
 const urlsToCache = [
